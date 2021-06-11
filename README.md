@@ -108,7 +108,7 @@ if __name__ == '__main__':
     t1 = time.perf_counter()
     threadpool = BoundedThreadPoolExecutor(50)
 
-    for i in range(1000):  # 这里随着函数的调用次数越多，对象池优势越明显。假设是运行10万次，三者耗时差距会更大一点。
+    for i in range(1000):  # 这里随着函数的调用次数越多，对象池优势越明显。假设是运行10万次，三者耗时差距会更大。
         # 这里演示三种调用，1是多线程里用使用对象池 2是使用多线程函数内部每次临时创建关闭对象 3是多线程函数内部使用全局唯一对象。
 
         # threadpool.submit(use_object_pool_run, i)  # 6秒完成
