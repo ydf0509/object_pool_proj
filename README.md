@@ -34,17 +34,31 @@ mysql连接池已经有知名的连接池包了。如果没有大佬给我们开
 
 ```
 
+## 常问问题回答
+
+### 1 对象池是线程安全的吗？
+
+```
+这个问题太水了，对象池就是为多线程或者并发而生的。
+你想一下，如果你的操作只有一个主线程，那直接用一个对象一直用就是了，反正不会遇到多线程要使用同一个对象。
+
+你花脑袋想想，如果你的代码是主线程单线程的，你有必要用dbutils来搞mysql连接池吗。
+直接用pymysql的conn不是更简单更香吗。
+
+任何叫池的东西都是为并发而生的，如果不能多线程安全，那存在的意义目的何在？
+
+```
 
 ## 测试代码
 
 tests_object_pool/test_mock_spend_time_object.py
-
 
 ```python
 from object_pool import ObjectPool, ObjectContext
 from threadpool_executor_shrink_able import BoundedThreadPoolExecutor
 import threading
 import time
+
 
 class MockSpendTimeObject:
 
@@ -64,7 +78,8 @@ class MockSpendTimeObject:
 
 
 pool = ObjectPool(object_type=MockSpendTimeObject, num=40).set_log_level(10)
-pool.specify_create_object_fun(lambda: MockSpendTimeObject())  # 这里可以指定为一个创建对象的函数对象，由于创建此对象比较简单就用lamada了。
+# 这里可以指定为一个创建对象的函数对象，由于创建此对象比较简单就用lamada了。
+pool.specify_create_object_fun(lambda: MockSpendTimeObject())  
 
 
 def use_object_pool_run(y):

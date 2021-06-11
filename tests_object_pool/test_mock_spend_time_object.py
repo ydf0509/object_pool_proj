@@ -41,7 +41,8 @@ class MockSpendTimeObject:
 
 
 pool = ObjectPool(object_type=MockSpendTimeObject, num=40).set_log_level(10)
-pool.specify_create_object_fun(lambda: MockSpendTimeObject())  # 这里可以指定为一个创建对象的函数对象，由于创建此对象比较简单就用lamada了。
+# 这里可以指定为一个创建对象的函数对象，由于创建此对象比较简单就用lamada了。
+pool.specify_create_object_fun(lambda: MockSpendTimeObject())
 
 
 def use_object_pool_run(y):
