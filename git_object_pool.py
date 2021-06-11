@@ -35,7 +35,7 @@ do_cmd('git commit -m commit')
 
 
 
-do_cmd('git push origin')
+do_cmd('git push')
 
 # print(subprocess.getstatusoutput('git push github'))
 print(f'{time.strftime("%H:%M:%S")}  spend_time {time.time() - t0}')
