@@ -1,4 +1,5 @@
-from object_pool import ObjectPool, ObjectContext
+import typing
+from universal_object_pool import ObjectPool, AbstractObject
 from threadpool_executor_shrink_able import BoundedThreadPoolExecutor
 import threading
 import time
@@ -23,32 +24,43 @@ mysql连接池已经有知名的连接池包了。如果没有大佬给我们开
 """
 
 
-class MockSpendTimeObject:
+class RawPyMysqlConn:
+    def insert(self, x):
+        print(f'插入 {x}')
+
+
+class MockSpendTimeObject(AbstractObject):
 
     def __init__(self, ):
         time.sleep(0.5)  # 模拟创建对象耗时
 
-        sum = 0  # 模拟创建对象耗费cpu
-        for i in range(10000 * 100):
-            sum += i
+        s = 0  # 模拟创建对象耗费cpu
+        for j in range(10000 * 100):
+            s += j
+
+        self.conn = self.main_obj = RawPyMysqlConn()  # 这个会造成obj.xx  自动调用 obj.main_obj.xx，很好用。
 
         self._lock = threading.Lock()
 
     def do_sth(self, x):
         with self._lock:
             time.sleep(0.1)
-            print(f'打印 {x} 。  假设做某事同一个object只能同时被一个线程调用此方法，是排他的')
+            self.conn.insert(x)
+            print(f' {x} 假设做某事同一个object只能同时被一个线程调用此方法，是排他的')
+
+    def clean_up(self):
+        print(f' {self} 被调用了')
 
 
 pool = ObjectPool(object_type=MockSpendTimeObject, num=40).set_log_level(10)
-# 这里可以指定为一个创建对象的函数对象，由于创建此对象比较简单就用lamada了。
-pool.specify_create_object_fun(lambda: MockSpendTimeObject())
 
 
 def use_object_pool_run(y):
     """ 第1种 使用对象池是正解"""
-    with ObjectContext(pool) as mock_obj:
-        mock_obj.do_sth(y)
+    # with ObjectContext(pool) as mock_obj:
+    #     mock_obj.do_sth(y)
+    with pool.get() as mock_obj:  # type:typing.Union[MockSpendTimeObject,RawPyMysqlConn]
+        mock_obj.insert(y)
 
 
 def create_object_every_times_for_run(y):
@@ -58,6 +70,7 @@ def create_object_every_times_for_run(y):
 
 
 global_mock_obj = MockSpendTimeObject()
+global_mock_obj.insert(6666)  # 自动拥有self.main_object的方法。
 
 
 def use_globle_object_for_run(y):
@@ -80,3 +93,5 @@ if __name__ == '__main__':
 
     threadpool.shutdown()
     print(time.perf_counter() - t1)
+
+    time.sleep(100)
