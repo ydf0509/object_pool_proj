@@ -1,72 +1,96 @@
-import time
-import typing
-import nb_log
-from queue import Queue
+import abc
+import queue
 import threading
+import time
+from queue import LifoQueue
+import decorator_libs
+import nb_log
 
 
 class ObjectPool(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
     def __init__(self, object_type, num=10):
         self.num = num
-        self.queue = self._queue = Queue(num)
-        self._create_object_fun = None  # type: typing.Callable
+        self.queue = self._queue = LifoQueue(num)
         self._lock = threading.Lock()
         self._is_using_num = 0
         self.object_type = object_type
         self.logger.setLevel(20)
+        self._check_and_cleanup_objects()
 
-    def specify_create_object_fun(self, fun):
-        self._create_object_fun = fun
+    @decorator_libs.keep_circulating(10, block=False, daemon=True)
+    def _check_and_cleanup_objects(self):
+        with self._lock:
+            while 1:
+                try:
+                    obj = self._queue.get_nowait()
+                except queue.Empty:
+                    break
+                else:
+                    # if time.time() - obj.the_obj_last_use_time > 30 * 60:
+                    if time.time() - obj.the_obj_last_use_time > 30 * 60:
+                        obj.clean_up()
+                    else:
+                        self._queue.put(obj)
 
-    def borrow_a_object(self, block, timeout):
+    def _borrow_a_object(self, block, timeout):
         with self._lock:
             self._is_using_num += 1
         try:
             if self._queue.qsize() == 0 and self._is_using_num <= self.num:
-                if self._create_object_fun is None or not isinstance(self._create_object_fun, typing.Callable):
-                    self.logger.critical(f'必须使用 specify_create_object_fun方法设置一个创建对象的函数')
-                    raise ValueError('必须使用 specify_create_object_fun方法设置一个创建对象的函数')
                 t1 = time.perf_counter()
-                obj = self._create_object_fun()
+                obj = self.object_type()
                 self.logger.info(f'创建对象 {obj} ,耗时 {time.perf_counter() - t1}')
-                if not isinstance(obj, self.object_type):
-                    raise ValueError(f' {self._create_object_fun} 函数必须return返回一个 {self.object_type} 类型的对象')
                 self._queue.put(obj)
                 # print(self._queue.qsize())
             obj = self._queue.get(block, timeout)
-            self.logger.warning(f'获取对象 {obj}')
+            self.logger.debug(f'获取对象 {obj}')
+            obj.the_obj_last_use_time = time.time()
             return obj
         except Exception as e:
             self.logger.critical(e, exc_info=True)
             with self._lock:
                 self._is_using_num -= 1
 
-    def back_a_object(self, obj):
+    def _back_a_object(self, obj):
         self._queue.put(obj)
         self.logger.debug(f'归还对象 {obj}')
         with self._lock:
             self._is_using_num -= 1
 
+    def get(self, block=True, timeout=None):
+        return ObjectContext(self, block=block, timeout=timeout)
 
+
+# noinspection PyProtectedMember
 class ObjectContext(nb_log.LoggerMixin):
-    def __init__(self, pool: ObjectPool, block=True, timeout=None):
+    def __init__(self, pool: ObjectPool, block, timeout):
         self._pool = pool
         self._block = block
         self._timeout = timeout
         self.obj = None
 
     def __enter__(self):
-        self.obj = self._pool.borrow_a_object(self._block, self._timeout)
+        self.obj = self._pool._borrow_a_object(self._block, self._timeout)
         return self.obj
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # self.logger.info(self.obj)
         if self.obj is not None:
-            self._pool.back_a_object(self.obj, )
+            self._pool._back_a_object(self.obj, )
         self.obj = None
 
     def __del__(self):
         # self.logger.warning(self.obj)
         if self.obj is not None:
-            self._pool.back_a_object(self.obj)
+            self._pool._back_a_object(self.obj)
         self.obj = None
+
+
+class AbstractObject(metaclass=abc.ABCMeta, ):
+    @abc.abstractmethod
+    def __init__(self):
+        pass
+
+    @abc.abstractmethod
+    def clean_up(self):
+        pass

@@ -1,4 +1,4 @@
-from object_pool import ObjectPool, ObjectContext
+from object_pool import ObjectPool, AbstractObject
 from threadpool_executor_shrink_able import BoundedThreadPoolExecutor
 import threading
 import time
@@ -23,7 +23,7 @@ mysql连接池已经有知名的连接池包了。如果没有大佬给我们开
 """
 
 
-class MockSpendTimeObject:
+class MockSpendTimeObject(AbstractObject):
 
     def __init__(self, ):
         time.sleep(0.5)  # 模拟创建对象耗时
@@ -39,15 +39,18 @@ class MockSpendTimeObject:
             time.sleep(0.1)
             print(f'打印 {x} 。  假设做某事同一个object只能同时被一个线程调用此方法，是排他的')
 
+    def clean_up(self):
+        print(f' {self} 被调用了')
+
 
 pool = ObjectPool(object_type=MockSpendTimeObject, num=40).set_log_level(10)
-# 这里可以指定为一个创建对象的函数对象，由于创建此对象比较简单就用lamada了。
-pool.specify_create_object_fun(lambda: MockSpendTimeObject())
 
 
 def use_object_pool_run(y):
     """ 第1种 使用对象池是正解"""
-    with ObjectContext(pool) as mock_obj:
+    # with ObjectContext(pool) as mock_obj:
+    #     mock_obj.do_sth(y)
+    with pool.get() as mock_obj:
         mock_obj.do_sth(y)
 
 
@@ -74,9 +77,11 @@ if __name__ == '__main__':
     for i in range(1000):  # 这里随着函数的调用次数越多，对象池优势越明显。假设是运行10万次，三者耗时差距会更大。
         # 这里演示三种调用，1是多线程里用使用对象池 2是使用多线程函数内部每次临时创建关闭对象 3是多线程函数内部使用全局唯一对象。
 
-        # threadpool.submit(use_object_pool_run, i)  # 6秒完成
-        threadpool.submit(create_object_every_times_for_run, i)  # 82秒完成
+        threadpool.submit(use_object_pool_run, i)  # 6秒完成
+        # threadpool.submit(create_object_every_times_for_run, i)  # 82秒完成
         # threadpool.submit(use_globle_object_for_run, i)  # 耗时100秒
 
     threadpool.shutdown()
     print(time.perf_counter() - t1)
+
+    time.sleep(100)
