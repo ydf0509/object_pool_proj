@@ -89,8 +89,11 @@ class ObjectContext(nb_log.LoggerMixin):
 class AbstractObject(metaclass=abc.ABCMeta, ):
     @abc.abstractmethod
     def __init__(self):
-        pass
+        self.main_obj = None
 
     @abc.abstractmethod
     def clean_up(self):
         pass
+
+    def __getattr__(self, item):
+        return getattr(self.main_obj, item)

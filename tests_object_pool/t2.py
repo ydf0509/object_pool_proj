@@ -1,4 +1,4 @@
 
-from object_pool import ObjectPool
+from universal_object_pool import ObjectPool
 
 
