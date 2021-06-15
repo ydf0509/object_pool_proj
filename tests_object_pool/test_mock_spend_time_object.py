@@ -61,6 +61,7 @@ def use_object_pool_run(y):
     #     mock_obj.do_sth(y)
     with pool.get() as mock_obj:  # type:typing.Union[MockSpendTimeObject,RawPyMysqlConn]
         mock_obj.insert(y)
+        mock_obj.do_sth(y)
 
 
 def create_object_every_times_for_run(y):
