@@ -58,11 +58,11 @@ class ObjectPool(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
             self._is_using_num -= 1
 
     def get(self, block=True, timeout=None):
-        return ObjectContext(self, block=block, timeout=timeout)
+        return _ObjectContext(self, block=block, timeout=timeout)
 
 
 # noinspection PyProtectedMember
-class ObjectContext(nb_log.LoggerMixin):
+class _ObjectContext(nb_log.LoggerMixin):
     def __init__(self, pool: ObjectPool, block, timeout):
         self._pool = pool
         self._block = block
