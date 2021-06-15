@@ -28,9 +28,9 @@ class MockSpendTimeObject(AbstractObject):
     def __init__(self, ):
         time.sleep(0.5)  # 模拟创建对象耗时
 
-        sum = 0  # 模拟创建对象耗费cpu
-        for i in range(10000 * 100):
-            sum += i
+        s = 0  # 模拟创建对象耗费cpu
+        for j in range(10000 * 100):
+            s += j
 
         self._lock = threading.Lock()
 
