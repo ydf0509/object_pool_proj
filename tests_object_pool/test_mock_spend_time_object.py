@@ -38,7 +38,7 @@ class MockSpendTimeObject(AbstractObject):
         for j in range(10000 * 100):
             s += j
 
-        self.conn = self.main_obj = RawPyMysqlConn()
+        self.conn = self.main_obj = RawPyMysqlConn()  # 这个会造成obj.xx  自动调用 obj.main_obj.xx，很好用。
 
         self._lock = threading.Lock()
 
