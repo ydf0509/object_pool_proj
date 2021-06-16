@@ -35,10 +35,10 @@ class MockSpendTimeObject(AbstractObject):
         time.sleep(0.5)  # 模拟创建对象耗时
 
         s = 0  # 模拟创建对象耗费cpu
-        for j in range(10000 * 100):
+        for j in range(10000 * 500):
             s += j
 
-        self.conn = self.main_obj = RawPyMysqlConn()  # 这个会造成obj.xx  自动调用 obj.main_obj.xx，很好用。
+        self.conn = self.core_obj = RawPyMysqlConn()  # 这个会造成obj.xx  自动调用 obj.core_obj.xx，很好用。
 
         self._lock = threading.Lock()
 
@@ -60,7 +60,7 @@ def use_object_pool_run(y):
     # with ObjectContext(pool) as mock_obj:
     #     mock_obj.do_sth(y)
     with pool.get() as mock_obj:  # type:typing.Union[MockSpendTimeObject,RawPyMysqlConn]
-        mock_obj.insert(y)
+        # mock_obj.insert(y)  # 可以直接使用core_obj的方法
         mock_obj.do_sth(y)
 
 
@@ -71,7 +71,7 @@ def create_object_every_times_for_run(y):
 
 
 global_mock_obj = MockSpendTimeObject()
-global_mock_obj.insert(6666)  # 自动拥有self.main_object的方法。
+global_mock_obj.insert(6666)  # 自动拥有self.core_object的方法。
 
 
 def use_globle_object_for_run(y):

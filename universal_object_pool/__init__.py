@@ -89,11 +89,11 @@ class _ObjectContext(nb_log.LoggerMixin):
 class AbstractObject(metaclass=abc.ABCMeta, ):
     @abc.abstractmethod
     def __init__(self):
-        self.main_obj = None
+        self.core_obj = None  # 这个主要是为了把自定义对象的属性指向的核心对象的方法自动全部注册到自定义对象的方法。
 
     @abc.abstractmethod
     def clean_up(self):
         pass
 
     def __getattr__(self, item):
-        return getattr(self.main_obj, item)
+        return getattr(self.core_obj, item)
