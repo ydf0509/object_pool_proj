@@ -90,6 +90,7 @@ class _ObjectContext(nb_log.LoggerMixin):
 
     def __enter__(self):
         self.obj = self._pool._borrow_a_object(self._block, self._timeout)
+        self.obj.is_available = True
         self.obj.before_use()
         return self.obj
 
@@ -135,4 +136,8 @@ class AbstractObject(metaclass=abc.ABCMeta, ):
 
     def __getattr__(self, item):
         """ 这个很强悍，可以使某个官方对象的全部方法和属性自动加到自己的自定义对象上面来。例如 myobj.conn.query(sql) 能直接 myobj.query(sql)"""
-        return getattr(self.core_obj, item)
+        # if 'item' in self.__dict__:
+        #     return getattr(self,item)
+        if 'core_obj' in self.__dict__:
+            return getattr(self.core_obj, item)
+        raise ValueError(f'{item} 方法或属性不存在')

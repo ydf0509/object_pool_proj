@@ -56,7 +56,7 @@ web后端是uwsgi gunicorn来自动开多线程或者协程是自动并发的，
 
 ## 利用对象池来封装任意类型的池演示
 
-contrib 文件夹自带演示了3个封装，包括http pymsql webdriver的池化。
+contrib 文件夹自带演示了4个封装，包括http pymsql webdriver paramiko(操作linux的python包)的池化。
 
 以下是pymysql_pool的池化代码，使用has a模式封装的PyMysqlOperator对象，你也可以使用is a来继承方式来写，但要实现clean_up等方法。
 

@@ -15,6 +15,8 @@ class CustomHTTPResponse(HTTPResponse):  # 为了ide补全
 
 
 class HttpOperator(AbstractObject):
+    """ 这个请求速度暴击requests，可以自行测试请求nginx网关本身"""
+
     def __init__(self, host, port=None, timeout=5,
                  source_address=None):
         self.conn = HTTPConnection(host=host, port=port, timeout=timeout, source_address=source_address, )
