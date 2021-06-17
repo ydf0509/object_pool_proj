@@ -28,6 +28,12 @@ class RawPyMysqlConn:
     def insert(self, x):
         print(f'插入 {x}')
 
+    def close(self):
+        print('关闭连接')
+
+    def rollback(self):
+        print('回滚')
+
 
 class MockSpendTimeObject(AbstractObject):
 
@@ -50,6 +56,9 @@ class MockSpendTimeObject(AbstractObject):
 
     def clean_up(self):
         print(f' {self} 被调用了')
+
+    def before_object_back_to_queue(self):
+        self.conn.rollback()  # 对象归还到对象池中前，如果还有事务由于出错没有提交，把已存在的事务清除掉。
 
 
 pool = ObjectPool(object_type=MockSpendTimeObject, num=40).set_log_level(10)
@@ -96,3 +105,4 @@ if __name__ == '__main__':
     print(time.perf_counter() - t1)
 
     time.sleep(100)
+    

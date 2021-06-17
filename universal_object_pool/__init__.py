@@ -46,10 +46,14 @@ class ObjectPool(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
             self.logger.debug(f'获取对象 {obj}')
             obj.the_obj_last_use_time = time.time()
             return obj
+        except queue.Empty as e:
+            self.logger.critical(f'{e}  对象池暂时没有可用的对象了，请把timeout加大、或者不设置timeout(没有对象就进行永久阻塞等待)、或者设置把对象池的数量num加大', exc_info=True)
+            raise e
         except Exception as e:
             self.logger.critical(e, exc_info=True)
             with self._lock:
                 self._is_using_num -= 1
+            raise e
 
     def _back_a_object(self, obj):
         self._queue.put(obj)
@@ -71,11 +75,13 @@ class _ObjectContext(nb_log.LoggerMixin):
 
     def __enter__(self):
         self.obj = self._pool._borrow_a_object(self._block, self._timeout)
+        self.obj.extra_init()
         return self.obj
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # self.logger.info(self.obj)
         if self.obj is not None:
+            self.obj.before_back_to_queue(exc_type, exc_val, exc_tb)
             self._pool._back_a_object(self.obj, )
         self.obj = None
 
@@ -93,7 +99,15 @@ class AbstractObject(metaclass=abc.ABCMeta, ):
 
     @abc.abstractmethod
     def clean_up(self):
+        """ 这里写关闭操作，如果没有逻辑，可以写 pass """
+
+    def extra_init(self):
+        """ 可以每次对取出来的对象做一些操作"""
         pass
+
+    @abc.abstractmethod
+    def before_back_to_queue(self, exc_type, exc_val, exc_tb):
+        """ 这里写 with语法退出__exit__前的操作，如果没有逻辑，可以写 pass """
 
     def __getattr__(self, item):
         return getattr(self.core_obj, item)
