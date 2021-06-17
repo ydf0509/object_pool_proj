@@ -10,8 +10,9 @@ mysql连接池就是pymsql.Connection类型的对象池，一切皆对象。
 编码中很多创建代价大的对象（耗时耗cpu），但是他们的核心操作方法只能是被一个线程占用。
 
 例如mysql，你用同一个conn在不同线程同时去高并发去执行插入修改删除操作就会报错，而且就算包不自带报错，
-带事务的即使不报错在多线程也容易混乱，例如线程1要吧conn roallback，线程2要commit，conn中的事务到底听谁的。
+带事务的即使不报错在多线程也容易混乱，例如线程1要吧conn roallback，线程2要commit，conn中的事务到底听谁的？
 例如一个浏览器要并发打开多个网页，线程1命令浏览器打开新浪，线程2命令浏览器打开搜狐，那么浏览器到底听谁的？
+一个socket链接要链接百度，另外一个线程又让他链接谷歌，那么这个socket到底听谁的？
 解决类似这种抓狂的场景，如果不想再函数内部频繁创建和摧毁，那么就要使用池化思想。
 
 </pre>
@@ -112,6 +113,7 @@ https://blog.csdn.net/Alan_Mathison_Turing/article/details/78512410 这个讲得
 contrib 文件夹自带演示了4个封装，包括http pymsql webdriver paramiko(操作linux的python包)的池化。
 
 ### 2.1 mysql 池化
+
 以下是pymysql_pool的池化代码，使用has a模式封装的PyMysqlOperator对象，你也可以使用is a来继承方式来写，但要实现clean_up等方法。
 
 ```python
@@ -147,7 +149,8 @@ class PyMysqlOperator(AbstractObject):
 
     # error_type_list_set_not_available = [pymysql.err.InterfaceError]
 
-    def __init__(self, host='192.168.6.130', user='root', password='123456', cursorclass=pymysql.cursors.DictCursor, autocommit=False, **pymysql_connection_kwargs):
+    def __init__(self, host='192.168.6.130', user='root', password='123456', cursorclass=pymysql.cursors.DictCursor,
+                 autocommit=False, **pymysql_connection_kwargs):
         in_params = copy.copy(locals())
         in_params.update(pymysql_connection_kwargs)
         in_params.pop('self')
@@ -198,10 +201,12 @@ if __name__ == '__main__':
             uname = values(uname),
             age = if(values(age)>age,values(age),age);
         '''
-        with mysql_pool.get(timeout=2) as operator:  # type: typing.Union[PyMysqlOperator,pymysql.cursors.DictCursor] #利于补全
+        with mysql_pool.get(
+                timeout=2) as operator:  # type: typing.Union[PyMysqlOperator,pymysql.cursors.DictCursor] #利于补全
             print(id(operator.cursor), id(operator.conn))
             operator.execute(sql, args=(f'name_{i}', i * 4))
-            print(operator.lastrowid)  # opererator 自动拥有 operator.cursor 的所有方法和属性。 opererator.methodxxx 会自动调用 opererator.cursor.methodxxx
+            print(
+                operator.lastrowid)  # opererator 自动拥有 operator.cursor 的所有方法和属性。 opererator.methodxxx 会自动调用 opererator.cursor.methodxxx
 
 
     operator_global = PyMysqlOperator()
@@ -298,7 +303,6 @@ class ParamikoOperator(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin, Abstra
 
         self.ssh_session = self.ssh.get_transport().open_session()
 
-
     def clean_up(self):
         self.sftp.close()
         self.ssh.close()
@@ -321,7 +325,8 @@ class ParamikoOperator(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin, Abstra
 
 if __name__ == '__main__':
     paramiko_pool = ObjectPool(object_type=ParamikoOperator,
-                               object_init_kwargs=dict(host='192.168.6.130', port=22, username='ydf', password='372148', ),
+                               object_init_kwargs=dict(host='192.168.6.130', port=22, username='ydf',
+                                                       password='372148', ),
                                max_idle_seconds=120, object_pool_size=20)
 
     ParamikoOperator(**dict(host='192.168.6.130', port=22, username='ydf', password='372148', ))
