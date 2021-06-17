@@ -20,19 +20,19 @@ import time
 正确的做法是使用mysql连接池库。如果设置开启的连接池中的数量是大于100，100线程插入1000次只需要10秒，节省时间100倍。
 mysql连接池已经有知名的连接池包了。如果没有大佬给我们开发mysql连接池库或者一个小众的需求还没有大神针对这个耗时对象开发连接池。
 那么可以使用 ObjectPool 实现对象池，连接池就是对象池的一种子集，connection就是pymysql.Connection类型的对象，连接也是对象。
+这是万能对象池，所以可以实现webdriver浏览器池。对象并不是需要严格实实在在的外部cocket或者浏览器什么的，也可以是python语言的一个普通对象。
+只要这个对象创建代价大，并且它的核心方法是非线程安全的，就很适合使用对象池来使用它。
 
 """
 
 
-class RawPyMysqlConn:
+class Core:  # 一般假设这是个三方包大神写的包里面的某个重要公有类,你需要写的是用has a 模式封装他，你当然也可以使用is a模式来继承它并加上clean_up before_back_to_queue 方法。
     def insert(self, x):
+        time.sleep(0.1)
         print(f'插入 {x}')
 
     def close(self):
         print('关闭连接')
-
-    def rollback(self):
-        print('回滚')
 
 
 class MockSpendTimeObject(AbstractObject):
@@ -44,24 +44,23 @@ class MockSpendTimeObject(AbstractObject):
         for j in range(10000 * 500):
             s += j
 
-        self.conn = self.core_obj = RawPyMysqlConn()  # 这个会造成obj.xx  自动调用 obj.core_obj.xx，很好用。
+        self.conn = self.core_obj = Core()  # 这个会造成obj.xx  自动调用 obj.core_obj.xx，很好用。
 
         self._lock = threading.Lock()
 
     def do_sth(self, x):
         with self._lock:
-            time.sleep(0.1)
             self.conn.insert(x)
             print(f' {x} 假设做某事同一个object只能同时被一个线程调用此方法，是排他的')
 
     def clean_up(self):
-        print(f' {self} 被调用了')
+        self.core_obj.close()
 
-    def before_object_back_to_queue(self):
-        self.conn.rollback()  # 对象归还到对象池中前，如果还有事务由于出错没有提交，把已存在的事务清除掉。
+    def before_back_to_queue(self, exc_type, exc_val, exc_tb):
+        pass
 
 
-pool = ObjectPool(object_type=MockSpendTimeObject, num=40).set_log_level(10)
+pool = ObjectPool(object_type=MockSpendTimeObject, object_pool_size=40).set_log_level(10)
 
 
 def use_object_pool_run(y):
@@ -105,4 +104,3 @@ if __name__ == '__main__':
     print(time.perf_counter() - t1)
 
     time.sleep(100)
-    

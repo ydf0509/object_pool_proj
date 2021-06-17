@@ -11,12 +11,12 @@ print(filepath)
 
 setup(
     name='universal_object_pool',  #
-    version="0.3",
-    description=( 'commmon  universal_object_pool '),
+    version="0.4",
+    description=('commmon  universal_object_pool '),
     keywords=("commmon  universal_object_pool",),
     # long_description=open('README.md', 'r',encoding='utf8').read(),
     long_description_content_type="text/markdown",
-    long_description= open(filepath, 'r',encoding='utf8').read(),
+    long_description=open(filepath, 'r', encoding='utf8').read(),
     # data_files=[filepath],
     author='bfzs',
     author_email='ydf0509@sohu.com',
@@ -38,7 +38,8 @@ setup(
         'Topic :: Software Development :: Libraries'
     ],
     install_requires=[
-        'nb_log'
+        'nb_log',
+        'decorator_libs',
     ]
 )
 """
@@ -46,7 +47,7 @@ setup(
 python setup.py sdist upload -r pypi
 
 
-python setup.py sdist & twine upload dist/universal_object_pool-0.3.tar.gz
+python setup.py sdist & twine upload dist/universal_object_pool-0.4.tar.gz
 twine upload dist/*
 
 
