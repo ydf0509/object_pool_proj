@@ -147,7 +147,7 @@ db.close()  # or del db
 
 
 class PyMysqlOperator(AbstractObject):
-    error_type_list_set_not_available = []  # 有待考察，出了特定类型的错误，可以设置对象已近无效不可用了。
+    error_type_list_set_not_available = []  # 出了特定类型的错误，可以设置对象已经无效不可用了，不归还到队列里面。
 
     # error_type_list_set_not_available = [pymysql.err.InterfaceError]
 
