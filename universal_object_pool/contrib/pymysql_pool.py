@@ -26,7 +26,7 @@ db.close()  # or del db
 
 
 class PyMysqlOperator(AbstractObject):
-    error_type_list_set_not_available = []  # 有待考察。
+    error_type_list_set_not_available = []  # 有待考察，出了特定类型的错误，可以设置对象已近无效不可用了。
 
     # error_type_list_set_not_available = [pymysql.err.InterfaceError]
 
@@ -120,3 +120,4 @@ if __name__ == '__main__':
             thread_pool.submit(test_update, x)
             # thread_pool.submit(test_update_multi_threads_use_one_conn, x)
         thread_pool.shutdown()
+    time.sleep(10000)  # 这个可以测试验证，此对象池会自动摧毁连接如果闲置时间太长，
