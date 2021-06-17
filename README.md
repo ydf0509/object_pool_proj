@@ -1,5 +1,7 @@
 ## pip install object_pool
 
+此包能够将一切任意类型的python对象池化，是万能池，适用范围远大于单一用途的mysql连接池 http连接池等。
+
 <pre style="color: darkgreen;font-size: medium">
 python 通用对象池，socket连接池、mysql连接池归根结底都是对象池。
 mysql连接池就是pymsql.Connection类型的对象池，一切皆对象。
