@@ -120,4 +120,4 @@ if __name__ == '__main__':
             thread_pool.submit(test_update, x)
             # thread_pool.submit(test_update_multi_threads_use_one_conn, x)
         thread_pool.shutdown()
-    time.sleep(10000)  # 这个可以测试验证，此对象池会自动摧毁连接如果闲置时间太长，
+    time.sleep(10000)  #这个可以测试验证，此对象池会自动摧毁连接如果闲置时间太长，会自动摧毁对象

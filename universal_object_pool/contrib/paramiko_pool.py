@@ -1,5 +1,5 @@
 import time
-
+import typing
 import decorator_libs
 import paramiko
 import nb_log
@@ -45,8 +45,6 @@ class ParamikoOperator(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin, Abstra
 
         self.ssh_session = self.ssh.get_transport().open_session()
 
-        print(self.ssh)
-
     def clean_up(self):
         self.sftp.close()
         self.ssh.close()
@@ -58,8 +56,8 @@ class ParamikoOperator(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin, Abstra
         # paramiko.channel.ChannelFile.readlines()
         self.logger.debug('要执行的命令是： ' + cmd)
         stdin, stdout, stderr = self.ssh.exec_command(cmd)
-        stdout_str = stdout.read().decode('utf8')
-        stderr_str = stderr.read().decode('utf8')
+        stdout_str = stdout.read().decode()
+        stderr_str = stderr.read().decode()
         if stdout_str != '':
             self.logger.info('执行 {} 命令的stdout是 -- > \n{}'.format(cmd, stdout_str))
         if stderr_str != '':
@@ -70,15 +68,17 @@ class ParamikoOperator(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin, Abstra
 if __name__ == '__main__':
     paramiko_pool = ObjectPool(object_type=ParamikoOperator,
                                object_init_kwargs=dict(host='192.168.6.130', port=22, username='ydf', password='372148', ),
-                               max_idle_seconds=60, object_pool_size=20)
+                               max_idle_seconds=120, object_pool_size=20)
 
     ParamikoOperator(**dict(host='192.168.6.130', port=22, username='ydf', password='372148', ))
 
 
     def test_paramiko(cmd):
-        with paramiko_pool.get() as paramiko_operator:  # type:ParamikoOperator
+        with paramiko_pool.get() as paramiko_operator:  # type:typing.Union[ParamikoOperator,paramiko.SSHClient]
             # pass
-            print(paramiko_operator.exec_cmd(cmd))
+            ret = paramiko_operator.exec_cmd(cmd)
+            print(ret[0])
+            print(ret[1])
 
 
     thread_pool = BoundedThreadPoolExecutor(20)
@@ -87,4 +87,4 @@ if __name__ == '__main__':
             thread_pool.submit(test_paramiko, 'date;sleep 20s;date')  # 这个命令单线程for循环顺序执行每次需要20秒，如果不用对象池执行80次要1600秒
             # thread_pool.submit(test_update_multi_threads_use_one_conn, x)
         thread_pool.shutdown()
-    time.sleep(10000)  # 这个可以测试验证，此对象池会自动摧毁连接如果闲置时间太长，
+    time.sleep(10000)  # 这个可以测试验证，此对象池会自动摧毁连接如果闲置时间太长，会自动摧毁对象
