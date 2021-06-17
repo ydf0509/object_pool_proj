@@ -13,6 +13,11 @@ from universal_object_pool import ObjectPool, AbstractObject
 from threadpool_executor_shrink_able import BoundedThreadPoolExecutor
 import decorator_libs
 
+"""
+这个是池化 webdriver浏览器对象，可以同时用多个浏览器打开网页，比单个浏览器单线程循环调用driver快多了。
+也比在多线程的函数内部频繁 driver实例化 和driver.quit()强很多。
+"""
+
 
 class WebDriverOperator(AbstractObject, nb_log.LoggerMixin):
     error_type_list_set_not_available = [NoSuchWindowException, URLError]

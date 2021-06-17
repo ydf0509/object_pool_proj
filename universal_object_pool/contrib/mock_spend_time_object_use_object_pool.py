@@ -25,10 +25,14 @@ mysql连接池已经有知名的连接池包了。如果没有大佬给我们开
 
 """
 
+"""
+此模块演示一般常规性任意对象的池化
+"""
+
 
 class Core:  # 一般假设这是个三方包大神写的包里面的某个重要公有类,你需要写的是用has a 模式封装他，你当然也可以使用is a模式来继承它并加上clean_up before_back_to_queue 方法。
     def insert(self, x):
-        time.sleep(0.1)
+        time.sleep(0.5)
         print(f'插入 {x}')
 
     def close(self):
@@ -38,7 +42,7 @@ class Core:  # 一般假设这是个三方包大神写的包里面的某个重�
 class MockSpendTimeObject(AbstractObject):
 
     def __init__(self, ):
-        time.sleep(0.5)  # 模拟创建对象耗时
+        time.sleep(0.1)  # 模拟创建对象耗时
 
         s = 0  # 模拟创建对象耗费cpu
         for j in range(10000 * 500):

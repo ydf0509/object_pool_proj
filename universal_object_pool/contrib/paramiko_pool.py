@@ -24,7 +24,6 @@ class ParamikoOperator(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin, Abstra
     """
     这个是linux操作包的池化。例如执行的shell命令耗时比较长，如果不采用池，那么一个接一个的命令执行将会很耗时。
     如果每次临时创建和摧毁linux连接，会很多耗时和耗cpu开销。
-
     """
 
     def __init__(self, host, port, username, password):
