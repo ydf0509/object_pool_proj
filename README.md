@@ -4,6 +4,8 @@
 
 框架使用对象池包，自带实现了4个对象池。可以直接开箱用这四个对象池，也可以作为例子学习对象池用法。
 
+contrib 文件夹自带演示了4个封装，包括http pymsql webdriver paramiko(操作linux的python包)的池化。
+
 <pre style="color: darkgreen;font-size: medium">
 python 通用对象池，socket连接池、mysql连接池归根结底都是对象池。
 mysql连接池就是pymsql.Connection类型的对象池，一切皆对象。
