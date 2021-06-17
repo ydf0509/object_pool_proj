@@ -93,6 +93,8 @@ https://blog.csdn.net/Alan_Mathison_Turing/article/details/78512410 这个讲得
 比如这个线程池  https://github.com/mingxiaoHe/ThreadPool/blob/master/threadpool.py 设计得很悲催，
 必须手动在整个项目最末未加上 pool.close(),而且不能加在代码中间，因为加载中间会导致如果之后继续提交任务就没线程能力执行了，太难了用了这种。
 
+还有这个 https://github.com/shengqi158/ThreadPool/blob/master/ThreadPool.py，最末未要加上threadpool.task_join()，
+很多封装的需要最最末尾加一句，主要是不知道守护线程用途。
 
 
 线程池的思路于对象池几乎完全不同。
