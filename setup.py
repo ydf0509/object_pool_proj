@@ -11,7 +11,7 @@ print(filepath)
 
 setup(
     name='universal_object_pool',  #
-    version="0.5",
+    version="0.6",
     description=('commmon  universal_object_pool '),
     keywords=("commmon  universal_object_pool",),
     # long_description=open('README.md', 'r',encoding='utf8').read(),
@@ -47,7 +47,7 @@ setup(
 python setup.py sdist upload -r pypi
 
 
-python setup.py sdist & twine upload dist/universal_object_pool-0.5.tar.gz
+python setup.py sdist & twine upload dist/universal_object_pool-0.6.tar.gz
 twine upload dist/*
 
 

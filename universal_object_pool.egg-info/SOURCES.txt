@@ -8,5 +8,7 @@ universal_object_pool.egg-info/requires.txt
 universal_object_pool.egg-info/top_level.txt
 universal_object_pool/contrib/__init__.py
 universal_object_pool/contrib/http_pool.py
+universal_object_pool/contrib/mock_spend_time_object_use_object_pool.py
+universal_object_pool/contrib/paramiko_pool.py
 universal_object_pool/contrib/pymysql_pool.py
 universal_object_pool/contrib/webdriver_pool.py
