@@ -48,7 +48,7 @@ if __name__ == '__main__':
     def test_request():
         # ss.get('http://127.0.0.1')
 
-        # requests.get('http://127.0.0.1')
+        # requests.get('http://127.0.0.1') # 这个请求速度被暴击。win上没有使用连接池如果超大线程并发请求，会造成频繁出现一个端口只能使用一次的错误。
 
         with http_pool.get() as conn:  # type: typing.Union[HttpOperator,HTTPConnection]  # http对象池的请求速度暴击requests的session和直接requests.get
             r1 = conn.request_and_getresponse('GET', '/')
