@@ -86,6 +86,11 @@ https://blog.csdn.net/Alan_Mathison_Turing/article/details/78512410 这个讲得
 线程池并不是像多线程把某个线程借出去使用然后利用完了归还，线程池里面的线程都是while true的死循环，
 不会像对象池例如mysql的conn查询一下几十毫秒钟就用完了，线程池里面的线程对象是永不结束的，没有借出去使用用完了后归还这种事情。
 
+所以不能想着学习池化mysql connection或者selnium的driver，也把threading.Thread池化呢，Thread对象随着run方法的结束就会自动摧毁了
+，无法人为的使Thread不摧毁，也就是说线程是随着run方法运行完成就自动结束了不可放到池子里面反复拿出来短暂利用，那么线程池是如何复用线程的呢？
+因为上面说了线程随着run方法运行完成就自动结束了是一次性的，那么主要是就是把线程池的每个线程的run方法设计成无限蒙蔽死循环的while 1永不结束就能解决复用问题了，
+每个线程的run方法都是在while 1 里面 fun,args = queue.get(block=True),每取出一个任务后就在当前线程执行 fun(*agrs)，所以线程一直是那个线程，
+但是可以运行的函数和函数参数却是无限可能的。
 任何线程池实现都是有个queue，生产者往queue里面submit任务，
 消费者是例如100个线程，每个线程里面跑的函数都是while True的死循环函数，while 1里面不断的用queue.get从queue里面拉取任务，
 拉取一个任务，就立即fun(x,y)这么去运行。任何语言任何人实现线程池一定是这个思路这么写的，没有例外。
