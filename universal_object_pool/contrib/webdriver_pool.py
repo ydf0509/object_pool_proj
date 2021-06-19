@@ -8,6 +8,8 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchWindowException
 from selenium.webdriver import DesiredCapabilities
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver import Chrome
+from selenium.webdriver import PhantomJS
 
 from universal_object_pool import ObjectPool, AbstractObject
 from threadpool_executor_shrink_able import BoundedThreadPoolExecutor
