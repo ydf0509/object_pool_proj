@@ -40,4 +40,4 @@ do_cmd('git push origin')
 
 # print(subprocess.getstatusoutput('git push github22'))
 print(f'{time.strftime("%H:%M:%S")}  spend_time {time.time() - t0}')
-time.sleep(100000)
+time.sleep(1000000)
