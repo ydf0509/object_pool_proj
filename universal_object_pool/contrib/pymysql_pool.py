@@ -22,6 +22,7 @@ res = cur.fetchone()
 cur.close()  # or del cur
 db.close()  # or del db
 
+
 """
 
 
