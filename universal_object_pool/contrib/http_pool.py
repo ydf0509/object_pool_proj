@@ -12,6 +12,7 @@ import decorator_libs
 
 class CustomHTTPResponse(HTTPResponse):  # 为了ide补全
     text: str = None
+    content: bytes = None
 
 
 class HttpOperator(AbstractObject):
@@ -29,16 +30,18 @@ class HttpOperator(AbstractObject):
         pass
 
     def request_and_getresponse(self, method, url, body=None, headers={}, *,
-                                encode_chunked=False) -> CustomHTTPResponse:
+                                encode_chunked=False, encoding="utf-8") -> CustomHTTPResponse:
         self.conn.request(method, url, body=body, headers=headers,
                           encode_chunked=encode_chunked)
         resp = self.conn.getresponse()
-        resp.text = resp.read()
+        resp.content = resp.read()
+        resp.text = resp.content.decode(encoding)
         return resp  # noqa
 
 
 if __name__ == '__main__':
-    http_pool = ObjectPool(object_type=HttpOperator, object_pool_size=100, object_init_kwargs=dict(host='127.0.0.1'), max_idle_seconds=60)
+    http_pool = ObjectPool(object_type=HttpOperator, object_pool_size=100, object_init_kwargs=dict(host='127.0.0.1'),
+                           max_idle_seconds=60)
 
     import requests
 
