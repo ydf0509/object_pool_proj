@@ -38,7 +38,7 @@ class PikaOperator(AbstractObject, ):
                                        routing_key=self._queue,
                                        body=body)
         except AMQPError as e:
-            self.logger.critical(e, exc_info=True)
+            self.logger.critical(e, exc_info=False)
             self._create_channel()
             self.channel.basic_publish(exchange='',
                                        routing_key=self._queue,
@@ -53,7 +53,7 @@ class PikaOperator(AbstractObject, ):
 
 
 if __name__ == '__main__':
-    pika_pool = ObjectPool(object_type=PikaOperator, object_pool_size=1, object_init_kwargs=dict(
+    pika_pool = ObjectPool(object_type=PikaOperator, object_pool_size=10, object_init_kwargs=dict(
         host='106.55.244.xxx', port=5672, user='xxxx', password='xxxx', queue='test_pika_pool_queue7'),
                            max_idle_seconds=60)
 
