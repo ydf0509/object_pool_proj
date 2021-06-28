@@ -20,7 +20,7 @@ from universal_object_pool import AbstractObject, ObjectPool
 """
 
 
-class ParamikoOperator(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin, AbstractObject):
+class ParamikoOperator( AbstractObject):
     """
     这个是linux操作包的池化。例如执行的shell命令耗时比较长，如果不采用池，那么一个接一个的命令执行将会很耗时。
     如果每次临时创建和摧毁linux连接，会很多耗时和耗cpu开销。
@@ -43,6 +43,8 @@ class ParamikoOperator(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin, Abstra
         self.ssh = self.core_obj = ssh
 
         self.ssh_session = self.ssh.get_transport().open_session()
+
+        self.logger = nb_log.get_logger(self.__class__.__name__)
 
     def clean_up(self):
         self.sftp.close()

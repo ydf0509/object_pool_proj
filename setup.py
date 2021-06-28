@@ -40,6 +40,7 @@ setup(
     install_requires=[
         'nb_log',
         'decorator_libs',
+        'threadpool_executor_shrink_able',
     ]
 )
 """

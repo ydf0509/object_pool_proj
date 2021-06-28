@@ -21,7 +21,7 @@ import decorator_libs
 """
 
 
-class WebDriverOperator(AbstractObject, nb_log.LoggerMixin):
+class WebDriverOperator(AbstractObject):
     error_type_list_set_not_available = [NoSuchWindowException, URLError]
 
     # 如果出现了这些错误，会自动把对象标记为不可用，会重新生成。
@@ -41,6 +41,7 @@ class WebDriverOperator(AbstractObject, nb_log.LoggerMixin):
         else:
             raise ValueError(f'driver_klass 设置的不正确')
         self.core_obj = self.driver = driver
+        self.logger = nb_log.get_logger(self.__class__.__name__)
 
     def _create_a_chrome_driver(self):
         driver_path = ChromeDriverManager().install()  # webdriver_manager 包可以自动下载安装chrome驱动，比较方便，不需要自己指定路径。

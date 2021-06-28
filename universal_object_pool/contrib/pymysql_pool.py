@@ -1,5 +1,6 @@
 import copy
 
+import nb_log
 import pymysql
 import typing
 from universal_object_pool import ObjectPool, AbstractObject
@@ -37,6 +38,7 @@ class PyMysqlOperator(AbstractObject):
         in_params.pop('self')
         in_params.pop('pymysql_connection_kwargs')
         self.conn = pymysql.Connection(**in_params)
+        self.logger = nb_log.get_logger(self.__class__.__name__)
 
     """ 下面3个是重写的方法"""
 
