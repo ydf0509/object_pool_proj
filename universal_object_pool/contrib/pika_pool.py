@@ -54,19 +54,19 @@ class PikaOperator(AbstractObject, ):
 
 if __name__ == '__main__':
     pika_pool = ObjectPool(object_type=PikaOperator, object_pool_size=1, object_init_kwargs=dict(
-        host='106.55.244.110', port=5672, user='xxxx', password='xxxx', queue='test_pika_pool_queue7'),
+        host='106.55.244.xxx', port=5672, user='xxxx', password='xxxx', queue='test_pika_pool_queue7'),
                            max_idle_seconds=60)
 
-    pika_oprator = PikaOperator(host='106.55.244.110', port=5672, user='admin', password='372148', queue='test_pika_pool_queue7')
+    pika_oprator = PikaOperator(host='106.55.244.xxx', port=5672, user='xxx', password='xxxx', queue='test_pika_pool_queue7')
 
 
     def test_publish():
-        # with pika_pool.get() as ch:  # type: typing.Union[Channel,PikaOperator]
-        #     # 如果是外网连接mq，就快很多。
-        #     ch.simple_publish('hello')
-        #     # print(ch)
-        #     # time.sleep(1)
-        pika_oprator.simple_publish('hello')
+        with pika_pool.get() as ch:  # type: typing.Union[Channel,PikaOperator]
+            # 如果是外网连接mq，就快很多。
+            ch.simple_publish('hello')
+            # print(ch)
+            # time.sleep(1)
+        # pika_oprator.simple_publish('hello')
 
     thread_pool = BoundedThreadPoolExecutor(200)
     with decorator_libs.TimerContextManager():
