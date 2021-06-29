@@ -40,25 +40,33 @@ class HttpOperator(AbstractObject):
 
 
 if __name__ == '__main__':
-    http_pool = ObjectPool(object_type=HttpOperator, object_pool_size=100, object_init_kwargs=dict(host='127.0.0.1'),
+    http_pool = ObjectPool(object_type=HttpOperator, object_pool_size=100, object_init_kwargs=dict(host='127.0.0.1',port=8888),
                            max_idle_seconds=60)
 
     import requests
 
     ss = requests.session()
 
+    import urllib3
+    mgr = urllib3.PoolManager(100)
+
 
     def test_request():
-        # ss.get('http://127.0.0.1')
+        # 这个连接池是requests性能5倍。
+        # resp = ss.get('http://127.0.0.1:8888')
 
-        # requests.get('http://127.0.0.1') # 这个请求速度被暴击。win上没有使用连接池如果超大线程并发请求，会造成频繁出现一个端口只能使用一次的错误。
+        # resp = requests.get('http://127.0.0.1:8888',headers = {'Connection':'close'}) # 这个请求速度被暴击。win上没有使用连接池如果超大线程并发请求，会造成频繁出现一个端口只能使用一次的错误。
+        # print(resp.text)
 
-        with http_pool.get() as conn:  # type: typing.Union[HttpOperator,HTTPConnection]  # http对象池的请求速度暴击requests的session和直接requests.get
-            r1 = conn.request_and_getresponse('GET', '/')
-            print(r1.text[:100])
+        resp=  mgr.request('get','http://127.0.0.1:8888')
+        print(resp.data)
+
+        # with http_pool.get() as conn:  # type: typing.Union[HttpOperator,HTTPConnection]  # http对象池的请求速度暴击requests的session和直接requests.get
+        #     r1 = conn.request_and_getresponse('GET', '/')
+        #     print(r1.text[:100])
 
 
-    thread_pool = BoundedThreadPoolExecutor(200)
+    thread_pool = BoundedThreadPoolExecutor(100)
     with decorator_libs.TimerContextManager():
         for x in range(30000):
             thread_pool.submit(test_request, )
