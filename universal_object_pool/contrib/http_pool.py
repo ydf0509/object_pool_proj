@@ -58,7 +58,7 @@ if __name__ == '__main__':
         # resp = requests.get('http://127.0.0.1:8888',headers = {'Connection':'close'}) # 这个请求速度被暴击。win上没有使用连接池如果超大线程并发请求，会造成频繁出现一个端口只能使用一次的错误。
         # print(resp.text)
 
-        resp=  mgr.request('get','http://127.0.0.1:8888')
+        resp=  mgr.request('get','http://127.0.0.1:8888')  # urllib3 第二快，次代码手动实现的http池是第一快。
         print(resp.data)
 
         # with http_pool.get() as conn:  # type: typing.Union[HttpOperator,HTTPConnection]  # http对象池的请求速度暴击requests的session和直接requests.get
