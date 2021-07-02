@@ -7,6 +7,7 @@ import decorator_libs
 import nb_log
 
 
+# noinspection PyUnusedLocal
 class ObjectPool(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
     def __init__(self, object_type, object_init_kwargs: dict = None, object_pool_size=10, max_idle_seconds=30 * 60):
         """
@@ -30,6 +31,8 @@ class ObjectPool(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
     @decorator_libs.keep_circulating(10, block=False, daemon=True)
     def _check_and_cleanup_objects(self):
         with self._lock:
+            t0 = time.time()
+            to_be_requeue_object = []
             while 1:
                 try:
                     obj = self._queue.get_nowait()
@@ -38,24 +41,32 @@ class ObjectPool(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
                 else:
                     # if time.time() - obj.the_obj_last_use_time > 30 * 60:
                     if time.time() - obj.the_obj_last_use_time > self._max_idle_seconds:
+                        # t1 = time.time()
+                        threading.Thread(target=obj.clean_up).start()
+                        # print(time.time() -t1)
                         self.logger.info(f'此对象空闲时间超过 {self._max_idle_seconds}  秒，使用 {obj.clean_up} 方法 自动摧毁{obj}')
-                        obj.clean_up()
                         self._has_create_object_num -= 1
                     else:
-                        self._queue.put(obj)
+                        to_be_requeue_object.append(obj)
+            [self._queue.put_nowait(obj) for obj in to_be_requeue_object]
+            if time.time() - t0 > 5:
+                self.logger.warning(f'耗时 {time.time() - t0}')
 
     def _borrow_a_object(self, block, timeout):
         with self._lock:
+            t0 = time.time()
             try:
-                # print(self._queue.qsize(), self._has_create_object_num)
+                # print(self._queue.qsize(), self._has_create_object_num,self.object_pool_size)
                 if self._queue.qsize() == 0 and self._has_create_object_num < self.object_pool_size:
                     t1 = time.perf_counter()
                     obj = self.object_type(**self._object_init_kwargs)
-                    self.logger.info(f'创建对象 {obj} ,耗时 {time.perf_counter() - t1}')
+                    self.logger.info(f'创建对象 {obj} ,耗时 {round(time.perf_counter() - t1,3)}')
                     self._queue.put(obj)
                     self._has_create_object_num += 1
                     # print(self._queue.qsize())
+                t2 = time.time()
                 obj = self._queue.get(block, timeout)
+                # print(time.time() -t2)
                 self.is_using_num += 1
                 self.logger.debug(f'获取对象 {obj}')
                 obj.the_obj_last_use_time = time.time()
@@ -66,6 +77,9 @@ class ObjectPool(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
             except Exception as e:
                 self.logger.critical(e, exc_info=True)
                 raise e
+            finally:
+                pass
+                # print(time.time() -t0)
 
     def _back_a_object(self, obj):
         if getattr(obj, 'is_available', None) is False:
