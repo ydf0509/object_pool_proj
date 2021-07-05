@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: universal-object-pool
-Version: 0.6
+Version: 0.7
 Summary: commmon  universal_object_pool 
 Home-page: UNKNOWN
 Author: bfzs
@@ -8,7 +8,13 @@ Author-email: ydf0509@sohu.com
 Maintainer: ydf
 Maintainer-email: ydf0509@sohu.com
 License: BSD License
-Description: ## pip install object_pool
+Description: ## pip install universal_object_pool
+        
+        此包能够将一切任意类型的python对象池化，是万能池，适用范围远大于单一用途的mysql连接池 http连接池等。
+        
+        使用这个通用对象池框架，自带实现了4个对象池例子。可以直接开箱用这四个对象池，也可以作为例子学习对象池用法。
+        
+        contrib 文件夹自带演示了4个封装，包括http pymsql webdriver paramiko(操作linux的python包)的池化。
         
         <pre style="color: darkgreen;font-size: medium">
         python 通用对象池，socket连接池、mysql连接池归根结底都是对象池。
@@ -18,8 +24,15 @@ Description: ## pip install object_pool
         编码中很多创建代价大的对象（耗时耗cpu），但是他们的核心操作方法只能是被一个线程占用。
         
         例如mysql，你用同一个conn在不同线程同时去高并发去执行插入修改删除操作就会报错，而且就算包不自带报错，
-        带事务的即使不报错在多线程也容易混乱，例如线程1要吧conn roallback，线程2要commit，conn中的事务到底听谁的。
+        带事务的即使不报错在多线程也容易混乱，例如线程1要吧conn roallback，线程2要commit，conn中的事务到底听谁的？
+        例如一个浏览器要并发打开多个网页，线程1命令浏览器打开新浪，线程2命令浏览器打开搜狐，那么浏览器到底听谁的？
+        一个http链接要打开百度新闻的第一页，另外一个线程又让他打开百度新闻的第二页，那么这个socket到底听谁的？
         解决类似这种抓狂的场景，如果不想再函数内部频繁创建和摧毁，那么就要使用池化思想。
+        
+        
+        如果一个对象的创建代价大例如耗时耗费代码行数长(耗cpu)，并且他的核心操作方法是耗时的并且是多线程不安全的，
+        那么就有必要使用池化，使程序运行速度加快。和这个对象代表的是不是一个socket连接，是不是一个浏览器，没有任何关系。
+        
         
         </pre>
         
@@ -50,7 +63,7 @@ Description: ## pip install object_pool
         
         ## 1.常问问题回答
         
-        ### 对象池是线程安全的吗？
+        ### 1.1 对象池是线程安全的吗？
         
         ```
         这个问题牛头不对马嘴 ，对象池就是为多线程或者并发而生的。
@@ -64,11 +77,67 @@ Description: ## pip install object_pool
         
         ```
         
+        ### 1.2 对象池 连接池 线程池有什么区别。
+        
+        ```
+        连接池就是对象池，连接池一般是链接数据库 或者中间件或者socket的对象，比如mysql的connection，有的对象并不是链接什么socket，
+        但是创建代价大，方法非线程安全，就是对象池。连接池是对象池的一个子集。
+        
+        线程池和对象池关系很小，此对象池可以实现了一切对象池化，但并不能拿来实现线程池。
+        如果要看线程池，https://github.com/ydf0509/threadpool_executor_shrink_able 此项目实现了线程池。
+        
+        
+        https://blog.csdn.net/Alan_Mathison_Turing/article/details/78512410 这个讲得对象池和线程池区别，讲的不错。
+        
+        一个对象池的基本行为包括：
+        
+        创建对象newObject()
+        借取对象getObject()
+        归还对象freeObject()
+        
+        线程池
+        首先摆出结论：线程池糅合了对象池模型，但是核心原理是生产者-消费者模型。
+        
+        线程池并不是像多线程把某个线程借出去使用然后利用完了归还，线程池里面的线程都是while true的死循环，
+        不会像对象池例如mysql的conn查询一下几十毫秒钟就用完了，线程池里面的线程对象是永不结束的，没有借出去使用用完了后归还这种事情。
+        
+        所以不能想着学习池化mysql connection或者selnium的driver，也把threading.Thread池化呢，Thread对象随着run方法的结束就会自动摧毁了
+        ，无法人为的使Thread不摧毁，也就是说线程是随着run方法运行完成就自动结束了不可放到池子里面反复拿出来短暂利用，那么线程池是如何复用线程的呢？
+        因为上面说了线程随着run方法运行完成就自动结束了是一次性的，那么主要是就是把线程池的每个线程的run方法设计成无限蒙蔽死循环的while 1永不结束就能解决复用问题了，
+        每个线程的run方法都是在while 1 里面 fun,args = queue.get(block=True),每取出一个任务后就在当前线程执行 fun(*agrs)，所以线程一直是那个线程，
+        但是可以运行的函数和函数参数却是无限可能的。
+        任何线程池实现都是有个queue，生产者往queue里面submit任务，
+        消费者是例如100个线程，每个线程里面跑的函数都是while True的死循环函数，while 1里面不断的用queue.get从queue里面拉取任务，
+        拉取一个任务，就立即fun(x,y)这么去运行。任何语言任何人实现线程池一定是这个思路这么写的，没有例外。
+        
+        说到死循环那就很有趣了，这里是线程池设计的一个难点重点，如果while True死循环，那线程池不是无敌了无解了，代码那不是永远结束不了？
+        线程池里面设计的一个难点就包括这里，所以很多人写的线程池都很难用，要么程序永不结束，要么设计成了线程池的queue里面还有任务没完成，
+        程序就结束了，所以pool.submit，很多人搞的线程池在代码最结尾要加上pool.termit什么玩意的，可以百度博客园python线程池好多就是这样的，
+        没有几个人设计的手写线程池达到了 concurrent.futures.Threadpoolexecutor那么好用的程度，最主要是不了解守护线程，
+        很多人都是搞的非守护线程，导致发明的线程池比内置的concurrent.futures.Threadpoolexecutor好用程度差十万八千里。
+        如果把while 1死循环的线程设置为守护线程，那么当主线程结束后，守护线程就会自动随程序结束了。当然了光设置守护线程还不够，
+        如果主线程把任务都submit到queue里面了，实际上线程池应该还需要运行queue里面的任务，所以还需要加个判断，要加上 atexit.register的钩子，
+        让任务执行完成才关闭。设计一个好用的线程池还是很难的，设计一个死循环导致代码永不能自动结束的线程池就简单很多了。
+        比如这个线程池  https://github.com/mingxiaoHe/ThreadPool/blob/master/threadpool.py 设计得很悲催，
+        必须手动在整个项目最末未加上 pool.close(),而且不能加在代码中间，因为加载中间会导致如果之后继续提交任务就没线程能力执行了，太难了用了这种
+        主要是不知道守护线程用途。
+        
+        还有这个 https://github.com/shengqi158/ThreadPool/blob/master/ThreadPool.py，最末未要加上threadpool.task_join()，
+        很多封装的需要最最末尾加一句，主要是不知道守护线程用途。
+        
+        
+        线程池的思路于对象池几乎完全不同。
+        
+        
+        
+        ```
+        
         ## 2.利用对象池来封装任意类型的池演示
         
         contrib 文件夹自带演示了4个封装，包括http pymsql webdriver paramiko(操作linux的python包)的池化。
         
         ### 2.1 mysql 池化
+        
         以下是pymysql_pool的池化代码，使用has a模式封装的PyMysqlOperator对象，你也可以使用is a来继承方式来写，但要实现clean_up等方法。
         
         ```python
@@ -100,11 +169,12 @@ Description: ## pip install object_pool
         
         
         class PyMysqlOperator(AbstractObject):
-            error_type_list_set_not_available = []  # 有待考察，出了特定类型的错误，可以设置对象已近无效不可用了。
+            error_type_list_set_not_available = []  # 出了特定类型的错误，可以设置对象已经无效不可用了，不归还到队列里面。
         
             # error_type_list_set_not_available = [pymysql.err.InterfaceError]
         
-            def __init__(self, host='192.168.6.130', user='root', password='123456', cursorclass=pymysql.cursors.DictCursor, autocommit=False, **pymysql_connection_kwargs):
+            def __init__(self, host='192.168.6.130', user='root', password='123456', cursorclass=pymysql.cursors.DictCursor,
+                         autocommit=False, **pymysql_connection_kwargs):
                 in_params = copy.copy(locals())
                 in_params.update(pymysql_connection_kwargs)
                 in_params.pop('self')
@@ -155,10 +225,12 @@ Description: ## pip install object_pool
                     uname = values(uname),
                     age = if(values(age)>age,values(age),age);
                 '''
-                with mysql_pool.get(timeout=2) as operator:  # type: typing.Union[PyMysqlOperator,pymysql.cursors.DictCursor] #利于补全
+                with mysql_pool.get(
+                        timeout=2) as operator:  # type: typing.Union[PyMysqlOperator,pymysql.cursors.DictCursor] #利于补全
                     print(id(operator.cursor), id(operator.conn))
                     operator.execute(sql, args=(f'name_{i}', i * 4))
-                    print(operator.lastrowid)  # opererator 自动拥有 operator.cursor 的所有方法和属性。 opererator.methodxxx 会自动调用 opererator.cursor.methodxxx
+                    print(
+                        operator.lastrowid)  # opererator 自动拥有 operator.cursor 的所有方法和属性。 opererator.methodxxx 会自动调用 opererator.cursor.methodxxx
         
         
             operator_global = PyMysqlOperator()
@@ -234,9 +306,7 @@ Description: ## pip install object_pool
             """
             这个是linux操作包的池化。例如执行的shell命令耗时比较长，如果不采用池，那么一个接一个的命令执行将会很耗时。
             如果每次临时创建和摧毁linux连接，会很多耗时和耗cpu开销。
-        
             """
-        
             def __init__(self, host, port, username, password):
                 # self.logger = nb_log.get_logger('ParamikoOperator')
         
@@ -254,7 +324,6 @@ Description: ## pip install object_pool
                 self.ssh = self.core_obj = ssh
         
                 self.ssh_session = self.ssh.get_transport().open_session()
-        
         
             def clean_up(self):
                 self.sftp.close()
@@ -278,7 +347,8 @@ Description: ## pip install object_pool
         
         if __name__ == '__main__':
             paramiko_pool = ObjectPool(object_type=ParamikoOperator,
-                                       object_init_kwargs=dict(host='192.168.6.130', port=22, username='ydf', password='372148', ),
+                                       object_init_kwargs=dict(host='192.168.6.130', port=22, username='ydf',
+                                                               password='372148', ),
                                        max_idle_seconds=120, object_pool_size=20)
         
             ParamikoOperator(**dict(host='192.168.6.130', port=22, username='ydf', password='372148', ))
@@ -299,7 +369,7 @@ Description: ## pip install object_pool
                     # thread_pool.submit(test_update_multi_threads_use_one_conn, x)
                 thread_pool.shutdown()
             time.sleep(10000)  # 这个可以测试验证，此对象池会自动摧毁连接如果闲置时间太长，会自动摧毁对象
-        
+            
         
         ```
         
@@ -416,7 +486,7 @@ Description: ## pip install object_pool
             print(time.perf_counter() - t1)
         
             time.sleep(100)
-        
+            
         ```
 Keywords: commmon  universal_object_pool
 Platform: all
