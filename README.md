@@ -126,6 +126,12 @@ https://blog.csdn.net/Alan_Mathison_Turing/article/details/78512410 这个讲得
 
 contrib 文件夹自带演示了4个封装，包括http pymsql webdriver paramiko(操作linux的python包)的池化。
 
+### 2.0 例如使用万能对象池包实现的 nb_http_client
+
+[nb_http_client](https://github.com/ydf0509/nb_http_client)
+
+nb_http_client 是 python 史上性能最强的http客户端，比任意自带和三方请求包快很多倍。
+
 ### 2.1 mysql 池化
 
 以下是pymysql_pool的池化代码，使用has a模式封装的PyMysqlOperator对象，你也可以使用is a来继承方式来写，但要实现clean_up等方法。
