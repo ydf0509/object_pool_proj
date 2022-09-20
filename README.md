@@ -24,6 +24,9 @@ mysql连接池就是pymsql.Connection类型的对象池，一切皆对象。
 那么就有必要使用池化，使程序运行速度加快。和这个对象代表的是不是一个socket连接，是不是一个浏览器，没有任何关系。
 
 
+这是一篇很好的博客，说明连接池重要性:
+!()[https://blog.csdn.net/claroja/article/details/103204159?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522166364368816782388023926%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=166364368816782388023926&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-2-103204159-null-null.nonecase&utm_term=python%20%20DBUtils&spm=1018.2226.3001.4450]
+
 </pre>
 
 ```
