@@ -44,7 +44,8 @@ class ObjectPool(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
                         # t1 = time.time()
                         threading.Thread(target=obj.clean_up).start()
                         # print(time.time() -t1)
-                        self.logger.info(f'此对象空闲时间超过 {self._max_idle_seconds}  秒，使用 {obj.clean_up} 方法 自动摧毁{obj}')
+                        self.logger.info(
+                            f'此对象空闲时间超过 {self._max_idle_seconds}  秒，使用 {obj.clean_up} 方法 自动摧毁{obj}')  # 例如mysql的连接，默认配置是超过8小时空闲，就会被回收，你再用这个连接对象去操作数据库就报报错了。
                         self._has_create_object_num -= 1
                     else:
                         to_be_requeue_object.append(obj)
@@ -60,7 +61,7 @@ class ObjectPool(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
                 if self._queue.qsize() == 0 and self._has_create_object_num < self.object_pool_size:
                     t1 = time.perf_counter()
                     obj = self.object_type(**self._object_init_kwargs)
-                    self.logger.info(f'创建对象 {obj} ,耗时 {round(time.perf_counter() - t1,3)}')
+                    self.logger.info(f'创建对象 {obj} ,耗时 {round(time.perf_counter() - t1, 3)}')
                     self._queue.put(obj)
                     self._has_create_object_num += 1
                     # print(self._queue.qsize())
@@ -72,7 +73,8 @@ class ObjectPool(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
                 obj.the_obj_last_use_time = time.time()
                 return obj
             except queue.Empty as e:
-                self.logger.critical(f'{e}  对象池暂时没有可用的对象了，请把timeout加大、或者不设置timeout(没有对象就进行永久阻塞等待)、或者设置把对象池的数量加大', exc_info=True)
+                self.logger.critical(f'{e}  对象池暂时没有可用的对象了，请把timeout加大、或者不设置timeout(没有对象就进行永久阻塞等待)、或者设置把对象池的数量加大',
+                                     exc_info=True)
                 raise e
             except Exception as e:
                 self.logger.critical(e, exc_info=True)

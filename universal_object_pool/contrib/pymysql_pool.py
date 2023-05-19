@@ -70,6 +70,9 @@ class PyMysqlOperator(AbstractObject):
         return self.cursor.execute(query, args)
 
 
+
+
+
 if __name__ == '__main__':
     mysql_pool = ObjectPool(object_type=PyMysqlOperator, object_pool_size=100, object_init_kwargs={'port': 3306})
 
